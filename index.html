@@ -157,6 +157,7 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
   <div class="nav-title">Run</div>
   <nav class="nav" id="side-nav">
     <a href="#overview">Overview</a>
+    <a href="#relic">Sealed relic</a>
     <a href="#runs">Runs</a>
     <a href="#checks">What is checked</a>
     <a href="#gate">Fixture gate</a>
@@ -207,6 +208,31 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
       <div class="stat"><div class="l">Throughput</div><div class="n" id="rate">-</div><div class="s">blocks journaled per minute, this run</div></div>
     </div>
     <p class="note" id="last-rejection"></p>
+  </section>
+
+  <section id="relic">
+    <p class="kicker">Sealed relic · detached pact start</p>
+    <h2>The files a reader downloads, and what the cleaner said about them.</h2>
+    <p class="section-lede">Sealed from the journal alone, with <code>detached_pact_start</code> (RFC-0001 §8.4.1): no sealed predecessor, so its link to genesis is stated as not established. Check the manifest first with <code>b3sum manifest.json</code>.</p>
+    <div id="relic-pending" class="card"><p class="unavail" style="margin:0">Not sealed yet. The seal runs from the journal as soon as all 8,192 blocks are in it.</p></div>
+    <div id="relic-body" hidden>
+      <div class="stats">
+        <div class="stat"><div class="l">Manifest BLAKE3</div><div class="n mono" style="font-size:0.75rem;letter-spacing:0;overflow-wrap:anywhere" id="r-b3">-</div></div>
+        <div class="stat"><div class="l">Pact root</div><div class="n mono" style="font-size:0.75rem;letter-spacing:0;overflow-wrap:anywhere" id="r-pact">-</div></div>
+        <div class="stat"><div class="l">Seal</div><div class="n" id="r-seal">-</div><div class="s">from the journal, no block fetches</div></div>
+        <div class="stat"><div class="l">Clean</div><div class="n" id="r-clean">-</div><div class="s">solo clean --files, every chain ID 1 check</div></div>
+      </div>
+      <div class="grid cols-2" style="margin-top:1rem">
+        <div class="card scroll"><table>
+          <thead><tr><th>Table</th><th>Rows</th><th>Bytes</th><th>Content hash</th></tr></thead>
+          <tbody id="r-files"></tbody>
+        </table></div>
+        <div class="transcript">
+          <div class="title"><span class="dot"></span>solo clean --files · relic 2079</div>
+          <pre id="r-clean-pre" tabindex="0"></pre>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section id="runs">
@@ -287,6 +313,7 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
 
 <nav class="bottom-nav" id="bottom-nav" aria-label="Sections">
   <a href="#overview">Overview</a>
+  <a href="#relic">Sealed relic</a>
   <a href="#runs">Runs</a>
   <a href="#checks">What is checked</a>
   <a href="#gate">Fixture gate</a>
@@ -303,6 +330,8 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
   const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
   const ago = t => { const s = Math.max(0, Math.round(Date.now() / 1000 - t)); return s < 90 ? `${s}s ago` : s < 5400 ? `${Math.round(s/60)}m ago` : `${Math.round(s/3600)}h ago`; };
   const when = t => new Date(t * 1000).toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+
+  const renderTranscript = lines => lines.map(l => { const e = esc(l); return /: pass$/.test(l) ? e.replace(/pass$/, '<span class="pass">pass</span>') : /^NOT checked|not checked/.test(l) ? `<span class="not">${e}</span>` : e; }).join('\n');
 
   function failed(why) {
     $('failed').style.display = 'block';
@@ -350,6 +379,17 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
       return `<tr><td>${when(r.started_unix)}</td><td><span class="badge ${cls}">${esc(r.state)}</span>${r.failure ? `<div class="note">${esc(r.failure)}</div>` : ''}</td><td>${probes}</td><td>${fmt(r.fetched_blocks) ?? '-'}</td><td>${fmt(r.held_after)}</td><td>${fmt(r.method_attempts)}</td><td>${fmt(r.http_exchanges)}</td></tr>`;
     }).join('') : '<tr><td colspan="7" class="unavail">No runs recorded yet.</td></tr>';
 
+    const z = s.sealed;
+    $('relic-pending').hidden = !!z;
+    $('relic-body').hidden = !z;
+    if (z) {
+      $('r-b3').textContent = z.manifest_blake3 || 'Unavailable';
+      $('r-pact').textContent = z.pact_root || 'Unavailable';
+      set('r-seal', fmt(z.seal_seconds), 's');
+      set('r-clean', fmt(z.clean_seconds), 's');
+      $('r-files').innerHTML = (z.files || []).map(f => `<tr><td><code>${esc(f.table)}</code></td><td>${fmt(f.row_count)}</td><td>${fmt(f.byte_size)}</td><td><code>${esc(String(f.content_hash).slice(0, 12))}</code></td></tr>`).join('');
+      $('r-clean-pre').innerHTML = `<span class="prompt">$</span> solo clean --files relics/1/002079/manifest.json\n` + renderTranscript(z.clean_transcript || []);
+    }
     const g = s.gate;
     if (g) {
       const rpc = g.tests.filter(t => t.name.startsWith('rpc::'));
@@ -358,7 +398,7 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
       $('tests-note').textContent = `${g.tests.filter(t => t.result === 'ok').length} of ${g.tests.length} shadow tests passed (${other} era1 and decoder tests not listed), ${g.tests_seconds}s, ${when(g.ran_unix)}.`;
       if (g.clean) {
         $('clean-pre').innerHTML = `<span class="prompt">$</span> solo clean --files --after &lt;fixture&gt;/002078.json &lt;fixture&gt;/relic/manifest.json\n` +
-          g.clean.transcript.map(l => { const e = esc(l); return /: pass$/.test(l) ? e.replace(/pass$/, '<span class="pass">pass</span>') : /^NOT checked|not checked/.test(l) ? `<span class="not">${e}</span>` : e; }).join('\n') + `\n<span class="prompt">exit ${g.clean.exit}</span>`;
+          renderTranscript(g.clean.transcript) + `\n<span class="prompt">exit ${g.clean.exit}</span>`;
       } else {
         $('clean-pre').innerHTML = UN;
       }
