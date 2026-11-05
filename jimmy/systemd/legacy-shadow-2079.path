@@ -2,7 +2,9 @@
 Description=Start the relic 2079 run once the GraphOps key file exists
 
 [Path]
-PathExists=%h/.config/nightswatch/the-legacy.env
+# PathModified, not PathExists: PathExists re-fires the service every time it exits while the
+# file is still there, which restarted a finished run until systemd's start limit stopped it.
+PathModified=%h/.config/nightswatch/the-legacy.env
 Unit=legacy-shadow-2079.service
 
 [Install]
