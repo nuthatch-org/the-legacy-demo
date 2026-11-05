@@ -158,6 +158,7 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
   <nav class="nav" id="side-nav">
     <a href="#overview">Overview</a>
     <a href="#relic">Sealed relic</a>
+    <a href="#showcase">Showcase</a>
     <a href="#runs">Runs</a>
     <a href="#checks">What is checked</a>
     <a href="#gate">Fixture gate</a>
@@ -233,6 +234,15 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
         </div>
       </div>
     </div>
+  </section>
+
+  <section id="showcase">
+    <p class="kicker">Showcase · Burrmill over relic 2079</p>
+    <h2>One SQL statement, a number you can check.</h2>
+    <p class="section-lede">Burrmill opens the sealed relic and runs each statement. Beside it, an independent Python script asks the RPC directly and sums with unbounded integers. It shares a provider with the Shadow, which is worth knowing. A refusal is a result: where a value does not fit DECIMAL(38,0), Burrmill says so instead of returning a smaller number.</p>
+    <div id="showcase-pending" class="card"><p class="unavail" style="margin:0">Not run yet.</p></div>
+    <div id="showcase-body" class="grid" hidden></div>
+    <p class="note" id="crosscheck-note"></p>
   </section>
 
   <section id="runs">
@@ -314,6 +324,7 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
 <nav class="bottom-nav" id="bottom-nav" aria-label="Sections">
   <a href="#overview">Overview</a>
   <a href="#relic">Sealed relic</a>
+  <a href="#showcase">Showcase</a>
   <a href="#runs">Runs</a>
   <a href="#checks">What is checked</a>
   <a href="#gate">Fixture gate</a>
@@ -389,6 +400,40 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
       set('r-clean', fmt(z.clean_seconds), 's');
       $('r-files').innerHTML = (z.files || []).map(f => `<tr><td><code>${esc(f.table)}</code></td><td>${fmt(f.row_count)}</td><td>${fmt(f.byte_size)}</td><td><code>${esc(String(f.content_hash).slice(0, 12))}</code></td></tr>`).join('');
       $('r-clean-pre').innerHTML = `<span class="prompt">$</span> solo clean --files relics/1/002079/manifest.json\n` + renderTranscript(z.clean_transcript || []);
+    }
+    const sc = s.showcase, cc = s.crosscheck;
+    $('showcase-pending').hidden = !!sc;
+    $('showcase-body').hidden = !sc;
+    if (sc) {
+      const c3 = cc && cc['3-steth-approvals'];
+      const expect = {
+        '1-withdrawals': cc && cc['1-withdrawals'],
+        '2-steth-transfers': cc && cc['2-steth-transfers'],
+        '3b-steth-approvals-counted': c3 && { unlimited_or_oversized: c3.unlimited_or_oversized, approvals: String(BigInt(c3.unlimited_or_oversized) + BigInt(c3.representable)) },
+        '3c-steth-approvals-representable': c3 && { representable: c3.representable, representable_total: c3.representable_total },
+      };
+      $('showcase-body').innerHTML = sc.map(st => {
+        const want = expect[st.name];
+        let result;
+        if (st.refused) {
+          result = `<p style="margin:0.6rem 0 0"><span class="badge accent">refused</span> <span class="note">${esc(st.status.replace(/^refused in [0-9.]+s: /, ''))}</span></p>`;
+        } else {
+          const head = st.columns.map(c => `<th>${esc(c)}</th>`).join('') + (want ? '<th>cross-check</th>' : '');
+          const rows = st.rows.map(r => {
+            let check = '';
+            if (want) {
+              const pairs = st.columns.map((c, i) => [c, r[i], want[c]]).filter(p => p[2] !== undefined);
+              const ok = pairs.every(([, got, exp]) => String(got) === String(exp));
+              check = `<td><span class="badge ${ok ? 'ok' : 'bad'}">${ok ? 'matches' : 'differs'}</span>${ok ? '' : `<div class="note">${pairs.map(([c, , e]) => esc(c + ' ' + e)).join(', ')}</div>`}</td>`;
+            }
+            return `<tr>${r.map(v => `<td><code style="background:none;padding:0">${esc(v)}</code></td>`).join('')}${check}</tr>`;
+          }).join('');
+          result = `<div class="scroll"><table style="margin-top:0.6rem"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+        }
+        const pending = !st.refused && expect.hasOwnProperty(st.name) && !want ? '<p class="note">Cross-check still running.</p>' : '';
+        return `<div class="card"><p class="kicker" style="margin-bottom:0.4rem">${esc(st.name)} · ${esc(st.status)}</p><div class="transcript"><pre>${esc(st.sql)}</pre></div>${result}${pending}</div>`;
+      }).join('');
+      $('crosscheck-note').textContent = cc ? `Cross-check: ${cc.rpc_calls} RPC calls in ${cc.seconds}s, ${cc.provider}.` : '';
     }
     const g = s.gate;
     if (g) {
