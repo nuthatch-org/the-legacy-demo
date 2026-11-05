@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en" data-palette="brick">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Legacy · Shadow run</title>
+<meta name="description" content="Live status of The Legacy's archive-RPC Shadow sealing mainnet relic 2079 on a ThinkPad, and the fixture gate it passed first.">
+<meta property="og:title" content="The Legacy · Shadow run">
+<meta property="og:description" content="One mainnet relic, journaled from an archive RPC under a request budget, with every check stated and every unchecked thing named.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='3' y='5' width='18' height='14' rx='2' fill='none' stroke='%23d0704f' stroke-width='1.7'/%3E%3Cpath d='M3 10h18M8 5v14' stroke='%23d0704f' stroke-width='1.7'/%3E%3C/svg%3E">
+<link rel="preload" href="fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/jetbrains-mono.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: 'Space Grotesk'; src: url(fonts/space-grotesk.woff2) format('woff2'); font-weight: 300 700; font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; src: url(fonts/jetbrains-mono.woff2) format('woff2'); font-weight: 400 700; font-display: swap; }
+
+:root {
+  --bg: #171614; --bg-elev: #201f1c; --bg-code: #1b1a17; --bg-inset: #262420;
+  --border: rgba(255,255,255,0.09); --border-hi: rgba(255,255,255,0.16);
+  --text: #ece9e3; --text-muted: #9c978c; --text-faint: #6e6a61;
+  --ok: #86b592; --warn: #cdb06a;
+  --radius: 10px; --radius-sm: 6px;
+  --display: 'Space Grotesk', ui-sans-serif, system-ui, 'Helvetica Neue', sans-serif;
+  --sans: 'Space Grotesk', ui-sans-serif, system-ui, 'Helvetica Neue', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Menlo', monospace;
+  color-scheme: dark;
+}
+:root[data-palette='brick'] {
+  --accent: #d0704f; --accent-ink: #f2cbbb;
+  --bad: #e36b6b; --bad-ink: #f5c4c4;
+  --pale-accent-bg: rgba(208,112,79,0.12); --pale-bad-bg: rgba(227,107,107,0.12);
+  --pale-warn-bg: rgba(205,176,106,0.12); --pale-green-bg: rgba(134,181,146,0.12);
+}
+
+* { box-sizing: border-box; }
+html { font-size: 112.5%; background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 0.875rem; line-height: 1.6; letter-spacing: -0.01em; }
+a { color: var(--accent); text-underline-offset: 0.2em; }
+::selection { background: var(--pale-accent-bg); color: var(--text); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.skip { position: absolute; left: -999rem; top: 0.5rem; background: var(--accent); color: var(--bg); padding: 0.4rem 0.8rem; border-radius: var(--radius-sm); z-index: 50; }
+.skip:focus { left: 0.5rem; }
+code, .mono { font-family: var(--mono); }
+code { background: var(--bg-inset); padding: 0.05rem 0.3rem; border-radius: 4px; font-size: 0.8125rem; }
+
+/* frame */
+.sidebar { position: fixed; inset: 0 auto 0 0; width: 15rem; border-right: 1px solid var(--border); padding: 1.4rem 1rem; background: var(--bg); overflow-y: auto; }
+.wordmark { font-family: var(--display); font-weight: 600; font-size: 1.25rem; letter-spacing: -0.06em; text-transform: lowercase; color: var(--text); text-decoration: none; display: block; }
+.tagline { font-family: var(--mono); font-size: 0.5625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-top: 0.2rem; }
+.nav-title { font-family: var(--mono); font-size: 0.5625rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin: 1.8rem 0 0.5rem 0.6rem; }
+.nav a { display: block; padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); color: var(--text-muted); text-decoration: none; font-size: 0.8125rem; transition: color 160ms; }
+.nav a:hover { color: var(--accent); }
+.nav a[aria-current='true'] { background: var(--pale-accent-bg); color: var(--text); box-shadow: inset 2px 0 0 var(--accent); }
+.topbar { position: sticky; top: 0; z-index: 10; height: 4.5rem; margin-left: 15rem; display: flex; align-items: center; gap: 1rem; padding: 0 2rem; background: rgba(23,22,20,0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+.topbar .page { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.topbar .right { margin-left: auto; display: flex; gap: 0.5rem; align-items: center; }
+main { margin-left: 15rem; padding: 2rem 2rem 4rem; max-width: 72rem; }
+.bottom-nav { display: none; }
+
+section { padding-block: 2.2rem; border-bottom: 1px solid var(--border); scroll-margin-top: 5rem; }
+section:last-of-type { border-bottom: 0; }
+.kicker { font-family: var(--mono); font-size: 0.625rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin: 0 0 0.6rem; }
+h1 { font-family: var(--display); font-weight: 500; font-size: clamp(2.8rem, 5vw, 4.7rem); line-height: 1.05; letter-spacing: -0.04em; margin: 0 0 1rem; max-width: 16ch; }
+h2 { font-family: var(--display); font-weight: 500; font-size: 1.125rem; letter-spacing: -0.03em; margin: 0 0 0.4rem; }
+.lede { color: var(--text-muted); max-width: 56ch; margin: 0 0 1.4rem; }
+.section-lede { color: var(--text-muted); max-width: 60ch; margin: 0 0 1.2rem; font-size: 0.875rem; }
+
+/* surfaces */
+.card { background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; transition: border-color 160ms; }
+.card:hover { border-color: var(--border-hi); }
+.grid { display: grid; gap: 1rem; }
+.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.stat { background: var(--bg-elev); padding: 1rem 1.1rem; }
+.stat .l { font-family: var(--mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.stat .n { font-family: var(--display); font-weight: 500; font-size: 1.875rem; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; margin-top: 0.3rem; }
+.stat .n .u { font-family: var(--mono); font-size: 0.625rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-left: 0.35rem; }
+.stat .s { color: var(--text-muted); font-size: 0.75rem; margin-top: 0.2rem; }
+
+.readout { background: var(--bg-code); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.2rem; }
+.readout .chrome { font-family: var(--mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; }
+.dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--accent); display: inline-block; }
+.dot.live { animation: pulse 2.4s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+.readout .figure { font-family: var(--mono); font-size: clamp(2rem, 5vw, 3.2rem); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; margin: 0.6rem 0 0.4rem; }
+.readout .figure .of { color: var(--text-muted); font-size: 0.5em; }
+.readout .foot { font-family: var(--mono); font-size: 0.625rem; letter-spacing: 0.06em; color: var(--text-muted); }
+.bar { height: 6px; background: var(--bg-inset); border-radius: 3px; overflow: hidden; margin: 0.8rem 0; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 600ms cubic-bezier(0.16,1,0.3,1); }
+
+.transcript { background: var(--bg-code); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.transcript .title { font-family: var(--mono); font-size: 0.625rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); display: flex; gap: 0.5rem; align-items: center; }
+.transcript pre { margin: 0; padding: 0.9rem 1rem; font-family: var(--mono); font-size: 0.6875rem; line-height: 1.85; overflow-x: auto; color: var(--text); white-space: pre; }
+.transcript .pass { color: var(--ok); }
+.transcript .not { color: var(--warn); }
+.transcript .prompt { color: var(--accent); }
+
+.badge { display: inline-block; font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.04em; padding: 0.1rem 0.55rem; border-radius: 9999px; background: var(--bg-inset); color: var(--text-muted); white-space: nowrap; }
+.badge.accent { background: var(--pale-accent-bg); color: var(--accent-ink); }
+.badge.ok { background: var(--pale-green-bg); color: var(--ok); }
+.badge.warn { background: var(--pale-warn-bg); color: var(--warn); }
+.badge.bad { background: var(--pale-bad-bg); color: var(--bad-ink); }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+th { text-align: left; font-size: 0.6875rem; font-weight: 500; color: var(--text-muted); padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+.scroll { overflow-x: auto; }
+
+.scope h3 { font-family: var(--mono); font-size: 0.625rem; letter-spacing: 0.14em; text-transform: uppercase; margin: 0 0 0.6rem; font-weight: 500; }
+.scope .in h3 { color: var(--ok); }
+.scope .out h3 { color: var(--warn); }
+.scope ul { margin: 0; padding-left: 1.1rem; color: var(--text-muted); }
+.scope li { margin: 0.25rem 0; }
+.scope li::marker { color: var(--accent); }
+
+.failed { display: none; background: var(--pale-bad-bg); color: var(--bad-ink); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7rem 1rem; margin-bottom: 1rem; font-size: 0.8125rem; }
+.failed b { color: var(--bad); font-family: var(--mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; margin-right: 0.5rem; }
+.unavail { color: var(--text-muted); font-family: var(--mono); font-size: 0.75rem; }
+.shimmer { background: var(--bg-inset); border-radius: 4px; display: inline-block; min-width: 4rem; height: 1em; animation: pulse 1.6s ease-in-out infinite; }
+.note { color: var(--text-muted); font-size: 0.75rem; margin-top: 0.6rem; }
+.issue { border-left: 2px solid var(--accent); padding-left: 0.9rem; }
+.issue p { margin: 0.3rem 0; color: var(--text-muted); }
+footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2rem 2rem 2rem; font-family: var(--mono); font-size: 0.625rem; letter-spacing: 0.08em; color: var(--text-muted); text-transform: uppercase; }
+
+@media (max-width: 920px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cols-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .sidebar { display: none; }
+  .topbar, main, footer { margin-left: 0; }
+  .topbar { height: 3.75rem; padding: 0 1rem; }
+  main { padding: 1.2rem 1rem calc(64px + env(safe-area-inset-bottom) + 2rem); }
+  footer { padding-bottom: calc(64px + env(safe-area-inset-bottom) + 1rem); }
+  .bottom-nav { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; height: calc(64px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); background: rgba(23,22,20,0.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--border); }
+  .bottom-nav a { flex: 1; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 0.5625rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); text-decoration: none; }
+  .bottom-nav a[aria-current='true'] { color: var(--accent); }
+}
+@media (max-width: 540px) {
+  .stats { grid-template-columns: 1fr 1fr; }
+  .stat .n { font-size: 1.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<aside class="sidebar" aria-label="Sections">
+  <a class="wordmark" href="#overview">the legacy</a>
+  <div class="tagline">shadow · archive rpc</div>
+  <div class="nav-title">Run</div>
+  <nav class="nav" id="side-nav">
+    <a href="#overview">Overview</a>
+    <a href="#runs">Runs</a>
+    <a href="#checks">What is checked</a>
+    <a href="#gate">Fixture gate</a>
+    <a href="#open">Open questions</a>
+  </nav>
+  <div class="nav-title">Source</div>
+  <nav class="nav">
+    <a href="https://github.com/nuthatch-org/the-legacy">the-legacy</a>
+    <a href="https://github.com/nuthatch-org/the-legacy-demo">this page</a>
+  </nav>
+</aside>
+
+<header class="topbar">
+  <span class="page" id="page-label">Overview</span>
+  <div class="right">
+    <span class="badge accent">chain 1</span>
+    <span class="badge" id="fresh">status <span class="shimmer"></span></span>
+  </div>
+</header>
+
+<main id="main">
+  <div class="failed" id="failed" role="alert"><b>Read failed</b><span id="failed-why">The status file could not be loaded. Every figure below is unavailable, not zero.</span></div>
+
+  <section id="overview">
+    <p class="kicker">Relic 2079 · blocks 17,031,168 to 17,039,359</p>
+    <h1>One relic, fetched and checked block by block.</h1>
+    <p class="lede">The archive-RPC Shadow pulls each block and its receipts from GraphOps, rebuilds the bytes the header commits to, and journals only what agrees. This page reads the journal on a ThinkPad called Jimmy. It is the Shapella relic: withdrawals begin partway through it.</p>
+
+    <div class="grid cols-2">
+      <div class="readout">
+        <div class="chrome"><span class="dot" id="live-dot"></span><span id="state-label">journal</span></div>
+        <div class="figure"><span id="held">-</span><span class="of"> / 8192 blocks</span></div>
+        <div class="bar" aria-hidden="true"><i id="held-bar"></i></div>
+        <div class="foot" id="readout-foot">journaled responses that passed every fetch-time check</div>
+      </div>
+      <div class="stats" style="grid-template-columns: 1fr 1fr;">
+        <div class="stat"><div class="l">Method calls</div><div class="n" id="attempts">-</div><div class="s" id="attempts-s">charged before they are sent</div></div>
+        <div class="stat"><div class="l">HTTP exchanges</div><div class="n" id="http">-</div><div class="s">counted separately from calls</div></div>
+        <div class="stat"><div class="l">Rejected responses</div><div class="n" id="rejected">-</div><div class="s" id="rejected-s">failed validation, never journaled</div></div>
+        <div class="stat"><div class="l">Transient errors</div><div class="n" id="transient">-</div><div class="s">rate limits and timeouts, retried</div></div>
+      </div>
+    </div>
+
+    <div class="stats" style="margin-top:1rem">
+      <div class="stat"><div class="l">Plan</div><div class="n" id="plan-calls">16,386<span class="u">calls</span></div><div class="s">two per block plus two probes</div></div>
+      <div class="stat"><div class="l">Credit estimate</div><div class="n" id="plan-credits">327,720<span class="u">cr</span></div><div class="s">20 per call, not an invoice</div></div>
+      <div class="stat"><div class="l">Journal on disk</div><div class="n" id="journal-bytes">-</div><div class="s">zstd JSON, mirror-local</div></div>
+      <div class="stat"><div class="l">Throughput</div><div class="n" id="rate">-</div><div class="s">blocks journaled per minute, this run</div></div>
+    </div>
+    <p class="note" id="last-rejection"></p>
+  </section>
+
+  <section id="runs">
+    <p class="kicker">Runs</p>
+    <h2>Every run is recorded, including the ones that stopped.</h2>
+    <p class="section-lede">From <code>provenance.json</code>, which lives beside the journal and is never published inside a relic. A run that ran out of budget or failed a probe is listed with its reason.</p>
+    <div class="card scroll"><table>
+      <thead><tr><th>Started</th><th>State</th><th>Probes</th><th>Fetched</th><th>Held after</th><th>Calls</th><th>HTTP</th></tr></thead>
+      <tbody id="runs-body"><tr><td colspan="7" class="unavail">Not read yet.</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section id="checks">
+    <p class="kicker">What is checked</p>
+    <h2>Two different claims, kept apart.</h2>
+    <p class="section-lede">The Shadow checks its own input before journaling it. <code>solo clean --files</code> checks the published files afterwards, and anyone can repeat that. Neither establishes that this is the canonical chain.</p>
+    <div class="grid cols-2 scope">
+      <div class="card in">
+        <h3>Checked</h3>
+        <ul>
+          <li>Header fields re-encode to the served block hash, through Prague</li>
+          <li>Every transaction envelope, types 0 to 4, rebuilt from fields, hashes to the served hash</li>
+          <li>Recovered sender equals the served <code>from</code> (Shadow only)</li>
+          <li>Served gasUsed, contractAddress, effectiveGasPrice and logIndex match what is derived</li>
+          <li>Transaction, receipt and withdrawal trie roots; receipt and header blooms; gas accounting</li>
+          <li>Parent links across the relic; file BLAKE3, Parquet counts and content hashes on clean</li>
+        </ul>
+      </div>
+      <div class="card out">
+        <h3>Not checked</h3>
+        <ul>
+          <li>Canonical-chain membership or any checkpoint anchor</li>
+          <li>Consensus rules and the fork schedule</li>
+          <li>Fee derivation, and blob gas fields, which are kept as served</li>
+          <li>Uncle headers beyond an empty-list check</li>
+          <li>Sender recovery, on clean: a reader cannot repeat the Shadow's fetch-time checks without the journal</li>
+          <li>Traces. The RPC source does not produce them</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="gate">
+    <p class="kicker">Fixture gate · RFC-0004 M1</p>
+    <h2>Run on Jimmy before any real endpoint was touched.</h2>
+    <p class="section-lede">A synthetic relic of 8,192 blocks with every transaction type, withdrawals from block four and Prague headers from block ten, served by a local JSON-RPC server that can lie, stall and shuffle. Then the existing cleaner, over the relic the Shadow sealed.</p>
+    <div class="grid cols-2">
+      <div class="card scroll"><table>
+        <thead><tr><th>Test</th><th>Result</th></tr></thead>
+        <tbody id="tests-body"><tr><td colspan="2" class="unavail">Not read yet.</td></tr></tbody>
+      </table><p class="note" id="tests-note"></p></div>
+      <div class="transcript">
+        <div class="title"><span class="dot"></span>solo clean --files · fixture relic 2079</div>
+        <pre id="clean-pre" tabindex="0">Not read yet.</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="open">
+    <p class="kicker">Open questions</p>
+    <h2>What this run cannot settle by itself.</h2>
+    <div class="grid cols-2">
+      <div class="card issue">
+        <h2>The pact has no detached start.</h2>
+        <p>RFC-0001 chains every relic to its predecessor, back to genesis. Relic 2079 has no sealed predecessor, so it is journaled now and sealed once an amendment for a declared detached segment is ruled on.</p>
+        <p><span class="badge warn">waiting on a decision</span></p>
+      </div>
+      <div class="card issue">
+        <h2>The fixtures found an era1 bug.</h2>
+        <p>The shared decoder asked whether a typed envelope was an RLP list, which reads its type byte as a one-byte string. Every type 1 and 2 transaction was refused, so era1 relics after Berlin could not have been sealed. Fixed on the branch.</p>
+        <p><span class="badge ok">fixed, pete/rpc-journal</span></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>the legacy · MIT or Apache-2.0 · status from jimmy, refreshed every minute · <span id="rev">revision unavailable</span></footer>
+
+<nav class="bottom-nav" id="bottom-nav" aria-label="Sections">
+  <a href="#overview">Overview</a>
+  <a href="#runs">Runs</a>
+  <a href="#checks">What is checked</a>
+  <a href="#gate">Fixture gate</a>
+  <a href="#open">Open questions</a>
+</nav>
+
+<script>
+(() => {
+  const STATUS = 'https://raw.githubusercontent.com/nuthatch-org/the-legacy-demo/status/status.json';
+  const $ = id => document.getElementById(id);
+  const fmt = n => (n === null || n === undefined) ? null : Number(n).toLocaleString('en-GB');
+  const UN = '<span class="unavail">Unavailable</span>';
+  const set = (id, v, unit) => { $(id).innerHTML = v === null ? UN : v + (unit ? `<span class="u">${unit}</span>` : ''); };
+  const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const ago = t => { const s = Math.max(0, Math.round(Date.now() / 1000 - t)); return s < 90 ? `${s}s ago` : s < 5400 ? `${Math.round(s/60)}m ago` : `${Math.round(s/3600)}h ago`; };
+  const when = t => new Date(t * 1000).toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+
+  function failed(why) {
+    $('failed').style.display = 'block';
+    if (why) $('failed-why').textContent = why;
+    for (const id of ['held','attempts','http','rejected','transient','journal-bytes','rate']) set(id, null);
+    $('fresh').innerHTML = 'status unavailable';
+    $('fresh').className = 'badge bad';
+  }
+
+  function render(s) {
+    $('failed').style.display = 'none';
+    const fresh = Date.now() / 1000 - s.generated_unix;
+    $('fresh').textContent = `status ${ago(s.generated_unix)}`;
+    $('fresh').className = 'badge ' + (fresh < 600 ? 'ok' : 'warn');
+    $('rev').textContent = s.legacy_revision ? `the-legacy ${s.legacy_revision.slice(0, 12)}` : 'revision unavailable';
+
+    const p = s.progress;
+    if (p) {
+      set('held', fmt(p.held));
+      $('held-bar').style.width = (100 * p.held / p.total) + '%';
+      $('state-label').textContent = `journal · ${p.state}`;
+      $('live-dot').classList.toggle('live', p.state === 'fetching');
+      $('readout-foot').textContent = `${p.held_before ? fmt(p.held_before) + ' held before this run, ' : ''}updated ${ago(p.updated_unix)}` + (p.failure ? ` · stopped: ${p.failure}` : '');
+      set('attempts', fmt(p.method_attempts));
+      $('attempts-s').textContent = p.budget_requests ? `of a budget of ${fmt(p.budget_requests)}` : 'no request budget set';
+      set('http', fmt(p.http_exchanges));
+      set('rejected', fmt(p.rejected_responses));
+      $('rejected').style.color = p.rejected_responses ? 'var(--bad)' : '';
+      set('transient', fmt(p.transient_errors));
+      const mins = (p.updated_unix - p.started_unix) / 60;
+      set('rate', mins > 0.2 ? fmt(Math.round((p.held - p.held_before) / mins)) : null, mins > 0.2 ? '/min' : '');
+      $('last-rejection').textContent = p.last_rejection ? `Last rejected response: ${p.last_rejection}` : '';
+    } else {
+      $('state-label').textContent = 'journal · not started';
+      $('readout-foot').textContent = 'No run has written progress yet. Nothing has been fetched from the real endpoint.';
+      for (const id of ['held','attempts','http','rejected','transient','rate']) set(id, null);
+    }
+    const jb = s.journal_bytes;
+    set('journal-bytes', jb === null ? null : (jb / 1e6).toFixed(1), 'MB');
+
+    const runs = (s.provenance && s.provenance.runs) || [];
+    $('runs-body').innerHTML = runs.length ? runs.slice().reverse().map(r => {
+      const cls = r.state === 'sealed' || r.state === 'journaled' ? 'ok' : r.state === 'budget exhausted' ? 'warn' : 'bad';
+      const probes = r.probes ? `chain ${r.probes.chain_id}, finalized ${fmt(r.probes.finalized)}` : '<span class="unavail">not reached</span>';
+      return `<tr><td>${when(r.started_unix)}</td><td><span class="badge ${cls}">${esc(r.state)}</span>${r.failure ? `<div class="note">${esc(r.failure)}</div>` : ''}</td><td>${probes}</td><td>${fmt(r.fetched_blocks) ?? '-'}</td><td>${fmt(r.held_after)}</td><td>${fmt(r.method_attempts)}</td><td>${fmt(r.http_exchanges)}</td></tr>`;
+    }).join('') : '<tr><td colspan="7" class="unavail">No runs recorded yet.</td></tr>';
+
+    const g = s.gate;
+    if (g) {
+      const rpc = g.tests.filter(t => t.name.startsWith('rpc::'));
+      const other = g.tests.length - rpc.length;
+      $('tests-body').innerHTML = rpc.map(t => `<tr><td><code>${esc(t.name.replace('rpc::tests::', ''))}</code></td><td><span class="badge ${t.result === 'ok' ? 'ok' : 'bad'}">${esc(t.result)}</span></td></tr>`).join('');
+      $('tests-note').textContent = `${g.tests.filter(t => t.result === 'ok').length} of ${g.tests.length} shadow tests passed (${other} era1 and decoder tests not listed), ${g.tests_seconds}s, ${when(g.ran_unix)}.`;
+      if (g.clean) {
+        $('clean-pre').innerHTML = `<span class="prompt">$</span> solo clean --files --after &lt;fixture&gt;/002078.json &lt;fixture&gt;/relic/manifest.json\n` +
+          g.clean.transcript.map(l => { const e = esc(l); return /: pass$/.test(l) ? e.replace(/pass$/, '<span class="pass">pass</span>') : /^NOT checked|not checked/.test(l) ? `<span class="not">${e}</span>` : e; }).join('\n') + `\n<span class="prompt">exit ${g.clean.exit}</span>`;
+      } else {
+        $('clean-pre').innerHTML = UN;
+      }
+    } else {
+      $('tests-body').innerHTML = `<tr><td colspan="2">${UN}</td></tr>`;
+      $('clean-pre').innerHTML = UN;
+    }
+  }
+
+  async function load() {
+    try {
+      const r = await fetch(`${STATUS}?t=${Math.floor(Date.now() / 30000)}`, { cache: 'no-store' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      render(await r.json());
+    } catch (e) {
+      failed(`The status file could not be loaded (${e.message}). Every figure is unavailable, not zero.`);
+    }
+  }
+  load();
+  setInterval(load, 60000);
+
+  const sections = [...document.querySelectorAll('main section')];
+  const links = [...document.querySelectorAll('#side-nav a, #bottom-nav a')];
+  const io = new IntersectionObserver(es => {
+    for (const e of es) if (e.isIntersecting) {
+      const id = e.target.id;
+      links.forEach(a => a.setAttribute('aria-current', a.getAttribute('href') === '#' + id ? 'true' : 'false'));
+      const a = links.find(a => a.getAttribute('href') === '#' + id);
+      if (a) $('page-label').textContent = a.textContent;
+    }
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  sections.forEach(s => io.observe(s));
+})();
+</script>
+</body>
+</html>
