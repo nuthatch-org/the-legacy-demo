@@ -271,8 +271,8 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
     <div class="grid cols-2">
       <div class="card issue">
         <h2>The pact has no detached start.</h2>
-        <p>RFC-0001 chains every relic to its predecessor, back to genesis. Relic 2079 has no sealed predecessor, so it is journaled now and sealed once an amendment for a declared detached segment is ruled on.</p>
-        <p><span class="badge warn">waiting on a decision</span></p>
+        <p>RFC-0001 chains every relic to its predecessor, back to genesis, and relic 2079 has none. A drafted amendment adds <code>detached_pact_start</code>: a flag inside the manifest hash, valid only on the first relic of an unanchored run, which <code>solo clean</code> reports as an anchor not established. Until it is ruled on, 2079 is journaled and not sealed.</p>
+        <p><span class="badge warn">amendment drafted, awaiting a ruling</span></p>
       </div>
       <div class="card issue">
         <h2>The fixtures found an era1 bug.</h2>
