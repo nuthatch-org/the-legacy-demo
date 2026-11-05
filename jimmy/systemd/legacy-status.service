@@ -1,0 +1,6 @@
+[Unit]
+Description=Publish The Legacy demo status.json
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash %h/the-legacy-demo/jimmy/publish.sh

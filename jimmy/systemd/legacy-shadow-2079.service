@@ -1,0 +1,23 @@
+[Unit]
+Description=The Legacy: journal mainnet relic 2079 from GraphOps (journal only, no seal)
+ConditionPathExists=%h/.config/nightswatch/the-legacy.env
+# Each start gets its own budget, so restarts are capped: at most three runs an hour.
+StartLimitIntervalSec=3600
+StartLimitBurst=3
+
+[Service]
+Type=exec
+EnvironmentFile=%h/.config/nightswatch/the-legacy.env
+WorkingDirectory=%h/the-legacy
+ExecStart=%h/the-legacy/target/release/shadow seal --source rpc --journal-only \
+  --from 17031168 --to 17039359 --chain-id 1 \
+  --endpoint https://rpc.graphops.xyz/v1/evm/1 --profile profiles/graphops.toml \
+  --journal %h/legacy-run/journal/1/002079 \
+  --budget-requests 20000 --concurrency 8 --rps 10 --retries 8
+ExecStopPost=/bin/bash %h/the-legacy-demo/jimmy/publish.sh
+Restart=on-failure
+RestartSec=120
+Nice=5
+
+[Install]
+WantedBy=default.target
