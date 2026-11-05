@@ -111,6 +111,7 @@ def main(out):
         "sealed": read_json(os.path.join(RUN, "sealed-2079.json")),
         "showcase": burrmill(),
         "crosscheck": exact(read_json(os.path.join(RUN, "evidence", "crosscheck.json"))),
+        "oracle": read_json(os.path.join(RUN, "oracle-1800.json")),
     }
     tmp = out + ".tmp"
     with open(tmp, "w") as f:

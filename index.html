@@ -159,6 +159,7 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
     <a href="#overview">Overview</a>
     <a href="#relic">Sealed relic</a>
     <a href="#showcase">Showcase</a>
+    <a href="#oracle">Oracle</a>
     <a href="#runs">Runs</a>
     <a href="#checks">What is checked</a>
     <a href="#gate">Fixture gate</a>
@@ -246,6 +247,23 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
     <p class="note" id="crosscheck-note"></p>
   </section>
 
+  <section id="oracle">
+    <p class="kicker">Oracle · relic 1800, era1 against RPC</p>
+    <h2>Two producers, one relic, the same rows.</h2>
+    <p class="section-lede">Relic 1800 (May 2022, pre-merge) sealed twice: once from the era1 archive file, once from GraphOps through the RPC Shadow. RFC-0001 §11.1 says independent producers agree when every table's canonical content hash is equal. GraphOps serves no pre-merge total difficulty, so the RPC side derives it from header difficulties plus one base value read from the era1 relic, and says so.</p>
+    <div id="oracle-pending" class="card"><p class="unavail" style="margin:0">Not compared yet. The RPC journal for relic 1800 is still filling.</p></div>
+    <div id="oracle-body" hidden>
+      <div class="card scroll"><table>
+        <thead><tr><th>Table</th><th>Rows</th><th>era1 content hash</th><th>RPC content hash</th><th>Agree</th></tr></thead>
+        <tbody id="oracle-rows"></tbody>
+      </table><p class="note" id="oracle-note"></p></div>
+      <div class="grid cols-2" style="margin-top:1rem">
+        <div class="transcript"><div class="title"><span class="dot"></span>solo clean --files · era1 relic 1800</div><pre id="oracle-clean-era1" tabindex="0"></pre></div>
+        <div class="transcript"><div class="title"><span class="dot"></span>solo clean --files · RPC relic 1800</div><pre id="oracle-clean-rpc" tabindex="0"></pre></div>
+      </div>
+    </div>
+  </section>
+
   <section id="runs">
     <p class="kicker">Runs</p>
     <h2>Every run is recorded, including the ones that stopped.</h2>
@@ -326,6 +344,7 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
   <a href="#overview">Overview</a>
   <a href="#relic">Sealed relic</a>
   <a href="#showcase">Showcase</a>
+  <a href="#oracle">Oracle</a>
   <a href="#runs">Runs</a>
   <a href="#checks">What is checked</a>
   <a href="#gate">Fixture gate</a>
@@ -435,6 +454,15 @@ footer { margin-left: 15rem; border-top: 1px solid var(--border); padding: 1.2re
         return `<div class="card"><p class="kicker" style="margin-bottom:0.4rem">${esc(st.name)} · ${esc(st.status)}</p><div class="transcript"><pre>${esc(st.sql)}</pre></div>${result}${pending}</div>`;
       }).join('');
       $('crosscheck-note').textContent = cc ? `Cross-check: ${cc.rpc_calls} RPC calls in ${cc.seconds}s, ${cc.provider}.` : '';
+    }
+    const o = s.oracle;
+    $('oracle-pending').hidden = !!o;
+    $('oracle-body').hidden = !o;
+    if (o) {
+      $('oracle-rows').innerHTML = o.tables.map(t => `<tr><td><code style="background:none;padding:0">${esc(t.table)}</code></td><td>${fmt(t.rpc_rows)}</td><td><code style="background:none;padding:0">${esc(String(t.era1_content_hash).slice(0, 16))}</code></td><td><code style="background:none;padding:0">${esc(String(t.rpc_content_hash).slice(0, 16))}</code></td><td><span class="badge ${t.equal ? 'ok' : 'bad'}">${t.equal ? 'equal' : 'differs'}</span></td></tr>`).join('');
+      $('oracle-note').textContent = `${o.all_equal ? 'Every table agrees.' : 'At least one table differs; that is a Shadow bug to find, not a spec change.'} Total difficulty base ${o.total_difficulty_base}, from ${o.total_difficulty_base_source}.`;
+      $('oracle-clean-era1').innerHTML = renderTranscript(o.clean_era1 || []);
+      $('oracle-clean-rpc').innerHTML = renderTranscript(o.clean_rpc || []);
     }
     const g = s.gate;
     if (g) {
