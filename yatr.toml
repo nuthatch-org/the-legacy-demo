@@ -1,0 +1,32 @@
+# yatr - https://github.com/cargopete/yatr
+#
+# Static site, no build. The jimmy/ scripts publish from Jimmy and are only linted here.
+
+[settings]
+cache = true
+
+[tasks.nav]
+desc = "Sidebar and mobile nav list the same sections; no em dashes or px font sizes"
+run = ["node check-nav.mjs"]
+sources = ["index.html", "check-nav.mjs"]
+
+[tasks.jimmy-lint]
+desc = "bash -n and shellcheck the jimmy/ shell scripts, parse the Python ones"
+shell = true
+parallel = true
+run = [
+    "for f in jimmy/*.sh; do bash -n \"$f\" || exit 1; done",
+    "shellcheck -S warning jimmy/*.sh",
+    "python3 -I -c 'import ast,sys; [ast.parse(open(f).read(), f) for f in sys.argv[1:]]' jimmy/*.py",
+]
+sources = ["jimmy/*.sh", "jimmy/*.py"]
+
+[tasks.serve]
+desc = "Serve the page on :8000"
+foreground = true
+run = ["python3 -m http.server 8000"]
+
+[tasks.ci]
+desc = "nav, jimmy-lint"
+depends = ["nav", "jimmy-lint"]
+run = []
